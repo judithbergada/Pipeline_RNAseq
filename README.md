@@ -26,7 +26,8 @@ The pipeline expects you to have the following folders:
 
 In addition, you will need at least one text file showing the experimental design.
 It should look as follows:
-```bash
+
+```
 Rep1_3_S24_R1_001	condition
 Rep2_3_S31_R1_001	condition
 Rep3_3_S38_R1_001	condition
@@ -36,12 +37,14 @@ Rep3_4_S39_R1_001	control
 ```
 
 To get information about the usage, please try:
+
 ```bash
 ./RNAseq.sh -h
 ```
 
 The RNAseq tool can be used with these parameters:
-```bash
+
+```
 Usage: RNAseq     [-h or --help]
                   [-f or --fastqfolder]
                   [-a or --annotfolder]
@@ -81,4 +84,3 @@ Required arguments:
 ```
 
 Enjoy using the tool!
-
