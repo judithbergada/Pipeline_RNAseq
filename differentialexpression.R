@@ -20,7 +20,7 @@ inputdata = commandArgs(trailingOnly=TRUE)
 outn = inputdata[1]
 conditions_txt = inputdata[2]
 
-print("\nPerforming differential expression analysis...\n")
+print("Performing differential expression analysis...")
 
 #################
 ## Import data ##
@@ -84,7 +84,7 @@ write.table(final_results,
   file = paste("outputs_", outn, "/Diff_expression_", compname, sep=""),
   quote = F, sep = "\t", row.names = F, col.names = T)
 
-print("Differential expression finished successfully.\n")
+print("Differential expression finished successfully.")
 
 ##########
 ## DONE ##
