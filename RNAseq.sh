@@ -12,6 +12,7 @@ Usage: RNAseq     [-h or --help]
                   [-f or --fastqfolder]
                   [-a or --annotfolder]
                   [-c or --condfiles]
+                  [-r or --revfastqfolder]
                   [-o or --outname]
                   [-t or --threads]
 """
@@ -31,12 +32,22 @@ Optional arguments:
                 Number of threads that will be used.
                 It must be an integer.
                 Default: 8.
+    -r, --revfastqfolder:
+                If you are using paired-end reads, this should be the
+                path to the folder that contains ALL your REVERSE reads.
+                Only FASTQ files should be placed in it.
+                Files might (or might not) be compressed.
+                Note: ONLY REVERSE reads must be found in this folder, and
+                we recommend to name the files exactly as the forward reads but
+                adding _2 or _reverse at the end (followed by .fastq or .fq.gz).
 
 Required arguments:
     -f, --fastqfolder:
                 Path to the folder that contains ALL your FASTQ files.
                 Only FASTQ files should be placed in it.
                 Files might (or might not) be compressed.
+                Note: if you are using paired-end reads, this should be the
+                folder that contains ONLY your FORWARD reads.
     -a, --annotfolder:
                 Path to the folder that contains the annotation files.
                 Only 2 files should be placed in this folder:
@@ -59,6 +70,7 @@ for ARGS in "$@"; do
                 "--fastqfolder") set -- "$@" "-f" ;;
                 "--annotfolder") set -- "$@" "-a" ;;
                 "--condfiles") set -- "$@" "-c" ;;
+                "--revfastqfolder") set -- "$@" "-r" ;;
                 "--outname") set -- "$@" "-o" ;;
                 "--threads") set -- "$@" "-t" ;;
                 "--help") set -- "$@" "-h" ;;
@@ -67,14 +79,15 @@ for ARGS in "$@"; do
 done
 
 # Define defaults
-outn="rnaseq"; threads=8
+outn="rnaseq"; threads=8; revfastqfolder=""
 
 # Define all parameters
-while getopts 'f:a:c:o::t::h' flag; do
+while getopts 'f:a:c:r::o::t::h' flag; do
         case "${flag}" in
                 f) fastqfolder=${OPTARG} ;;
                 a) annotfolder=${OPTARG} ;;
                 c) condfiles=${OPTARG} ;;
+                r) revfastqfolder=${OPTARG} ;;
                 o) outn=${OPTARG} ;;
                 t) threads=${OPTARG} ;;
                 h) print_help
@@ -195,6 +208,31 @@ if ! [[ ${threads} =~ ^[0-9]+$ ]]; then
   echo "Solution: remove this optional parameter or use an integer."
   exit 1
 fi
+# Check if directory providing reverse FASTQ files exist
+if [[ ${revfastqfolder} != "" ]]; then
+  if [ ! -d ${revfastqfolder} ]; then
+    echo "Error: --revfastqfolder doesn't exist."
+    echo "Solution: check if the path to this directory is correct."
+    exit 1
+  fi
+  # Check if only FASTQ files are provided in the revfastqfolder
+  for revseqfile in ${revfastqfolder}/*; do
+    # Get the extension of the file, if file is compressed
+    if file --mime-type ${revseqfile} | grep -q gzip; then
+      revfilename=${revseqfile%.*}
+      revextension=${revfilename##*.}
+    else # Get the extension of the file, if file is NOT compressed
+      revextension=${revseqfile##*.}
+    fi
+    # Check if extension is fastq or fq
+    revextension=$(tr "[:upper:]" "[:lower:]" <<< ${revextension})
+    if [[ ${revextension} != "fq" && ${revextension} != "fastq" ]]; then
+      echo "Error: --revfastqfolder should only contain FASTQ files."
+      echo "Solution: remove any other file from this directory."
+      exit 1
+    fi
+  done
+fi
 echo "Optional inputs seem correct."
 
 
@@ -208,7 +246,7 @@ currentdir=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 
 # Perform quality control
 bash ${currentdir}/qualitycontrol.sh \
-  "${outn}" "${fastqfolder}" "${threads}" # Inputs
+  "${outn}" "${fastqfolder}" "${threads}" "${revfastqfolder}" # Inputs
 if [[ $(echo $?) != 0 ]]; then exit 1; fi # Exit if error
 
 # Index the genome files
@@ -216,10 +254,15 @@ bash ${currentdir}/genomegenerate.sh \
   "${outn}" "${fastqfolder}" "${fastaf}" "${annotf}" "${threads}" # Inputs
 if [[ $(echo $?) != 0 ]]; then exit 1; fi # Exit if there has been an error.
 
-# Align reads to the genome
-bash ${currentdir}/alignment.sh \
-  "${outn}" "${fastqfolder}" "${annotf}" "${threads}" # Inputs
-if [[ $(echo $?) != 0 ]]; then exit 1; fi # Exit if there has been an error.
+if [[ ${revfastqfolder} != "" ]]; then
+  bash ${currentdir}/alignment_pairedreads.sh \
+    "${outn}" "${fastqfolder}" "${annotf}" "${threads}" "${revfastqfolder}"
+  if [[ $(echo $?) != 0 ]]; then exit 1; fi # Exit if there has been an error.
+else
+  bash ${currentdir}/alignment.sh \
+    "${outn}" "${fastqfolder}" "${annotf}" "${threads}" # Inputs
+  if [[ $(echo $?) != 0 ]]; then exit 1; fi # Exit if there has been an error.
+fi
 
 # Perform analysis of differential expression
 for comparison in $condfiles; do
