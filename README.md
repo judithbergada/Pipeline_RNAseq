@@ -21,7 +21,7 @@ git clone https://github.com/judithbergada/Pipeline_RNAseq
 ## Usage
 
 The pipeline expects you to have the following folders:
-- FASTQ folder: this is a folder containg only your sequencing reads (FASTQ files).
+- FASTQ folder: this is a folder containing only your sequencing reads (FASTQ files).
 - Annotation folder: this is a folder containing only 2 files (a FASTA file and a GTF file).
 
 In addition, you will need at least one text file showing the experimental design.
@@ -49,6 +49,7 @@ Usage: RNAseq     [-h or --help]
                   [-f or --fastqfolder]
                   [-a or --annotfolder]
                   [-c or --condfiles]
+                  [-r or --revfastqfolder]
                   [-o or --outname]
                   [-t or --threads]
 
@@ -63,12 +64,22 @@ Optional arguments:
                 Number of threads that will be used.
                 It must be an integer.
                 Default: 8.
+    -r, --revfastqfolder:
+                If you are using paired-end reads, this should be the
+                path to the folder that contains ALL your REVERSE reads.
+                Only FASTQ files should be placed in it.
+                Files might (or might not) be compressed.
+                Note: ONLY REVERSE reads must be found in this folder, and
+                we recommend to name the files exactly as the forward reads but
+                adding _2 or _reverse at the end (followed by .fastq or .fq.gz).
 
 Required arguments:
     -f, --fastqfolder:
                 Path to the folder that contains ALL your FASTQ files.
                 Only FASTQ files should be placed in it.
                 Files might (or might not) be compressed.
+                Note: if you are using paired-end reads, this should be the
+                folder that contains ONLY your FORWARD reads.
     -a, --annotfolder:
                 Path to the folder that contains the annotation files.
                 Only 2 files should be placed in this folder:
