@@ -28,7 +28,7 @@ print("Performing differential expression analysis...")
 
 # Open counts file obtained from the alignment
 info = read.table(paste("outputs_", outn, "/table.counts.txt", sep=""),
-  stringsAsFactors = F, header = T)[-c(1:4),]
+  stringsAsFactors = F, header = T, check.names = F)[-c(1:4),]
 
 # Use first column names as rownames
 rownames(info) = info$ID
