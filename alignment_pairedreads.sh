@@ -22,48 +22,51 @@ rm -rf outputs_${outn} && \
   mkdir outputs_${outn} && \
   chmod +xwr outputs_${outn}
 
+n=0
 for i in ${fastqfolder}/* ; do
-  for j in ${revfastqfolder}/*; do
-    # Take name of fastqfile ignoring zip, fastq and common part
-    namef=$(echo $i | sed 's/\.gz//g' | sed 's/\.fastq//g' | sed 's/\.fq//g')
-    # Remove directory from the fastqfile name and keep only the name of file
-    namef=$(echo ${namef} | sed 's/.*\///g')
+  # Get the needed reverse file matching the forward one
+  rvffiles=${revfastqfolder}/*
+  j=$(echo "${rvffiles[$n]}")
+  # Take name of fastqfile ignoring zip, fastq and common part
+  namef=$(echo $i | sed 's/\.gz//g' | sed 's/\.fastq//g' | sed 's/\.fq//g')
+  # Remove directory from the fastqfile name and keep only the name of file
+  namef=$(echo ${namef} | sed 's/.*\///g')
 
-    # Check if file is compressed
-    if file --mime-type $i | grep -q gzip; then
-      readflag='--readFilesCommand "gunzip -c"'
-    fi
+  # Check if file is compressed
+  if file --mime-type $i | grep -q gzip; then
+    readflag='--readFilesCommand "gunzip -c"'
+  fi
 
-    # Perform alignment
-    STAR --runThreadN ${threads} \
-      --runMode alignReads \
-      --genomeDir genome_${outn} \
-      --readFilesIn $i $j \
-      --twopassMode Basic \
-      --outSAMtype None \
-      --quantMode GeneCounts \
-      --sjdbGTFfile ${annotf} \
-      --sjdbGTFfeatureExon CDS \
-      --outTmpDir temporal \
-      --outFileNamePrefix "${namef}_" \
-      ${readflag}
+  # Perform alignment
+  STAR --runThreadN ${threads} \
+    --runMode alignReads \
+    --genomeDir genome_${outn} \
+    --readFilesIn $i $j \
+    --twopassMode Basic \
+    --outSAMtype None \
+    --quantMode GeneCounts \
+    --sjdbGTFfile ${annotf} \
+    --sjdbGTFfeatureExon CDS \
+    --outTmpDir temporal \
+    --outFileNamePrefix "${namef}_" \
+    ${readflag}
 
-    # Remove temporal directory if exists
-    rm -rf temporal
-    rm -rf temporal*
+  # Remove temporal directory if exists
+  rm -rf temporal
+  rm -rf temporal*
 
-    # Get only needed columns of outputs, which contain un-stranded gene counts
-    cat ${namef}_ReadsPerGene.out.tab | \
-    cut -f1,2 > "intermediate_${outn}/reads_${namef}.tab"
+  # Get only needed columns of outputs, which contain un-stranded gene counts
+  cat ${namef}_ReadsPerGene.out.tab | \
+  cut -f1,2 > "intermediate_${outn}/reads_${namef}.tab"
 
-    # Save useful files considering user parameters
-    mv "${namef}_Log.final.out" \
-    intermediate_${outn}/Statistics_alignment_${namef}.txt
+  # Save useful files considering user parameters
+  mv "${namef}_Log.final.out" \
+  intermediate_${outn}/Statistics_alignment_${namef}.txt
 
-    # Remove files that can lead to problems in future iterations
-    rm ${namef}_Log* ${namef}_SJ.out.tab
-    rm -r *STAR*
-  done
+  # Remove files that can lead to problems in future iterations
+  rm ${namef}_Log* ${namef}_SJ.out.tab
+  rm -r *STAR*
+  n=$n+1
 done
 
 ##################################################
