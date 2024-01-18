@@ -25,7 +25,7 @@ rm -rf outputs_${outn} && \
 n=0
 for i in ${fastqfolder}/* ; do
   # Get the needed reverse file matching the forward one
-  rvffiles=${revfastqfolder}/*
+  rvffiles=(${revfastqfolder}/*)
   j=$(echo "${rvffiles[$n]}")
   # Take name of fastqfile ignoring zip, fastq and common part
   namef=$(echo $i | sed 's/\.gz//g' | sed 's/\.fastq//g' | sed 's/\.fq//g')
