@@ -28,12 +28,12 @@ In addition, you will need at least one text file showing the experimental desig
 It should look as follows:
 
 ```
-Rep1_3_S24_R1_001	condition
-Rep2_3_S31_R1_001	condition
-Rep3_3_S38_R1_001	condition
-Rep1_4_S25_R1_001	control
-Rep2_4_S32_R1_001	control
-Rep3_4_S39_R1_001	control
+Rep1_3_S24_R1_001	ctrl
+Rep2_3_S31_R1_001	ctrl
+Rep3_3_S38_R1_001	ctrl
+Rep1_4_S25_R1_001	experiment
+Rep2_4_S32_R1_001	experiment
+Rep3_4_S39_R1_001	experiment
 ```
 
 To get information about the usage, please try:
